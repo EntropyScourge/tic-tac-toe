@@ -15,7 +15,8 @@ const gameController = (() => {
     const _player2 = createPlayer('Player 2', 'o');
     const _players = [];
     _players.push(_player1, _player2)
-    let _currentPlayer = _player1;
+    let _currentPlayer = _players[0];
+    let _gameEnded = false;
     
     const getCurrentPlayer = () => {
         return _currentPlayer;
@@ -29,39 +30,27 @@ const gameController = (() => {
     };
     
     const _checkGameEnded = (board, index) => {
-        //Check if tie
-        if (!board.includes(undefined)) {
-            return 'tie';
-        }
         const row = Math.floor(index/3);
         const col = index % 3;
         //Check row
-        if (board[row*3]==board[row*3+1] && board[row*3]==board[row*3+2]) {
-            return true;
-        }
+        if ((board[row*3]==board[row*3+1] && board[row*3]==board[row*3+2])
         //Check column
-        if (board[col]==board[col+3] && board[col]==board[col+6]) {
-            return true;
-        }
+        || (board[col]==board[col+3] && board[col]==board[col+6])
         //Check diagonals
-        if (row==col) {
-            if (board[0] && board[0]==board[4] && board[0]==board[8]) {
-                return true;
-            }
+        || ((row==col) && (board[0] && board[0]==board[4] && board[0]==board[8]))
+        || ((col==2-row) && (board[2] && board[2]==board[4] && board[2]==board[6]))) {
+            _gameEnded = true;
         }
-        if (col==2-row) {
-            if (board[2] && board[2]==board[4] && board[2]==board[6]) {
-                return true;
-            }
+        //Check if tie
+        else if (!board.includes(undefined)) {
+            _gameEnded = 'tie';
         }
-        return false;
     }
     
     const playTurn = (index) => {
-        displayController.markBoard(index);
-        console.log(gameboard.state);
-        const outcome = _checkGameEnded(gameboard.state, index)
-        switch (outcome) {
+        if (!_gameEnded) displayController.markBoard(index);
+        _checkGameEnded(gameboard.state, index)
+        switch (_gameEnded) {
             case 'tie':
                 displayController.showMessage('It\'s a tie!');
                 break;
@@ -70,17 +59,24 @@ const gameController = (() => {
                 const winningPlayer = _players.filter(player => winningSymbol == player.symbol)[0];
                 displayController.showMessage(`${winningPlayer.name} Wins!`);
         }
-        _changePlayer();
+        if (_gameEnded) {
+            _currentPlayer = _players[0];
+        }
+        else {
+            _changePlayer();
+            displayController.showMessage(`${_currentPlayer.name}'s turn`);
+        }
     }
     
     const newGame = (reset=false) => {
+        _gameEnded = false;
         displayController.renderGameboard(reset);
         if (reset) {
             for (i=0; i<9; i++) {
                 gameboard.state[i] = undefined;
             }
         }
-        displayController.showMessage('');
+        displayController.showMessage(`${_players[0].name}'s turn`);
     }
 
     return {getCurrentPlayer, newGame, playTurn};
@@ -111,9 +107,7 @@ const displayController = (() => {
         const square = document.getElementById('square-'+index);
         const currentPlayer = gameController.getCurrentPlayer();
         if (!gameboard.state[index]) {
-            console.log('before:',gameboard.state)
             gameboard.placeSymbol(currentPlayer.symbol, index);
-            console.log('after:',gameboard.state)
             square.innerHTML = currentPlayer.symbol;
         }
     };

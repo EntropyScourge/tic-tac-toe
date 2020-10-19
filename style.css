@@ -24,8 +24,10 @@
     width: 100px;
     height: 100px;
     text-align: center;
+    border: solid 1px;
 }
 
 #reset-btn {
+    margin: 10px;
     width: 100px;
 }
