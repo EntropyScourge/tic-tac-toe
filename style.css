@@ -25,9 +25,15 @@
     height: 100px;
     text-align: center;
     border: solid 1px;
+    background-color: white;
 }
 
 #reset-btn {
     margin: 10px;
     width: 100px;
+}
+
+#name-input {
+    text-align: center;
+    margin: auto;
 }

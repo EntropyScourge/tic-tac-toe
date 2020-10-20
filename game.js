@@ -6,8 +6,8 @@ const gameboard = (() => {
     return {state, placeSymbol};
 })();
 
-const createPlayer = (name, symbol) => {
-    return {name, symbol};
+const createPlayer = (name, symbol, ai=false) => {
+    return {name, symbol, ai};
 }
 
 const gameController = (() => {
@@ -17,6 +17,17 @@ const gameController = (() => {
     _players.push(_player1, _player2)
     let _currentPlayer = _players[0];
     let _gameEnded = false;
+    const _winningSquares = [];
+
+    const renamePlayers = () => {
+        if (!_gameEnded) {
+            const player1Name = displayController.getPlayerName(1);
+            _player1.name = player1Name? player1Name : _player1.name;
+            const player2Name = displayController.getPlayerName(2);
+            _player2.name = player2Name? player2Name : _player2.name;
+            displayController.showMessage(`${_currentPlayer.name}'s turn`);
+        };
+    };
     
     const getCurrentPlayer = () => {
         return _currentPlayer;
@@ -33,12 +44,22 @@ const gameController = (() => {
         const row = Math.floor(index/3);
         const col = index % 3;
         //Check row
-        if ((board[row*3]==board[row*3+1] && board[row*3]==board[row*3+2])
+        if (board[row*3]==board[row*3+1] && board[row*3]==board[row*3+2]) {
+            _winningSquares.push(3*row, 3*row+1, 3*row+2);
+            _gameEnded = true;
+        }
         //Check column
-        || (board[col]==board[col+3] && board[col]==board[col+6])
+        else if (board[col]==board[col+3] && board[col]==board[col+6]) {
+            _winningSquares.push(col, col+3, col+6);
+            _gameEnded = true;
+        }
         //Check diagonals
-        || ((row==col) && (board[0] && board[0]==board[4] && board[0]==board[8]))
-        || ((col==2-row) && (board[2] && board[2]==board[4] && board[2]==board[6]))) {
+        else if ((row==col) && (board[0] && board[0]==board[4] && board[0]==board[8])) {
+            _winningSquares.push(0, 4, 8);
+            _gameEnded = true;
+        }
+        else if ((col==2-row) && (board[2] && board[2]==board[4] && board[2]==board[6])) {
+            _winningSquares.push(2, 4 ,6);
             _gameEnded = true;
         }
         //Check if tie
@@ -58,6 +79,10 @@ const gameController = (() => {
                 const winningSymbol = gameboard.state[index];
                 const winningPlayer = _players.filter(player => winningSymbol == player.symbol)[0];
                 displayController.showMessage(`${winningPlayer.name} Wins!`);
+                console.log(_winningSquares);
+                _winningSquares.forEach(index => {
+                    displayController.colorSquare(index, 'red');
+                });
         }
         if (_gameEnded) {
             _currentPlayer = _players[0];
@@ -69,20 +94,33 @@ const gameController = (() => {
     }
     
     const newGame = (reset=false) => {
+        for (i=0; i<3; i++) _winningSquares.pop();
         _gameEnded = false;
         displayController.renderGameboard(reset);
         if (reset) {
             for (i=0; i<9; i++) {
+                displayController.colorSquare(i, 'white');
                 gameboard.state[i] = undefined;
             }
         }
+        
+        console.log('lol');
+
         displayController.showMessage(`${_players[0].name}'s turn`);
     }
 
-    return {getCurrentPlayer, newGame, playTurn};
+    return {getCurrentPlayer, newGame, playTurn, renamePlayers};
 })();
 
 const displayController = (() => {
+    const _resetBtn = document.getElementById("reset-btn");
+    _resetBtn.addEventListener("click", () => gameController.newGame(true));
+
+    const _nameSubmit = document.getElementById("name-submit");
+    _nameSubmit.addEventListener("click", () => {
+        gameController.renamePlayers();
+    });
+
     const renderGameboard = (reset) => {
         for (i=0; i<9; i++) {
             const square = reset ? 
@@ -93,14 +131,14 @@ const displayController = (() => {
                 square.setAttribute('id', 'square-'+i);
                 square.index = i;
                 square.addEventListener("click", (event) => {
-                    gameController.playTurn(event.target.index);
+                    if (event.target.innerHTML === '-') {
+                        gameController.playTurn(event.target.index);
+                    }
                 });
                 document.getElementById('gameboard-container').appendChild(square);
             }
             square.innerHTML = '-';
         }
-        resetBtn = document.getElementById("reset-btn");
-        resetBtn.addEventListener("click", () => gameController.newGame(true));
     }
 
     const markBoard = (index) => {
@@ -112,12 +150,21 @@ const displayController = (() => {
         }
     };
 
+    const colorSquare = (index, color) => {
+        const square = document.getElementById('square-'+index);
+        square.style.backgroundColor = color;
+    }
+
     const showMessage = (message) => {
         messageBox = document.getElementById('message-box');
         messageBox.innerHTML = message;
     };
 
-    return {renderGameboard, markBoard, showMessage};
+    const getPlayerName = (playerNumber) => {
+        return document.getElementById('input-'+playerNumber).value;
+    };
+
+    return {renderGameboard, markBoard, colorSquare, showMessage, getPlayerName};
 })();
 
 gameController.newGame(false);

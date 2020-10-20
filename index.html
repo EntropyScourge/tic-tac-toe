@@ -4,8 +4,24 @@
     <meta lang="en">
     <meta charset="utf-8">
     <link rel="stylesheet" href="style.css">
+    <title>Noughts and Crosses</title>
 </head>
 <body>
+    <form id="name-input">
+        <div>
+            <label for="input-1">Player 1 name</label>
+            <input id="input-1" type="text">
+            <label for="ai-1">Computer controlled</label>
+            <input id="ai-1" type="checkbox">
+        </div>
+        <div>
+            <label for="input-2">Player 2 name</label>
+            <input id="input-2" type="text">
+            <label for="ai-2">Computer controlled</label>
+            <input id="ai-2" type="checkbox">
+        </div>
+        <input type="button" id="name-submit" value="Submit">
+    </form>
     <div id="game-container">
         <div id="message-box"></div>
         <div id="gameboard-container"></div>
