@@ -17,7 +17,8 @@ const gameController = (() => {
     _players.push(_player1, _player2)
     let _currentPlayer = _players[0];
     let _gameEnded = false;
-    const _winningSquares = [];
+    let _winningSquares = [];
+    let _availableSquares = [0,1,2,3,4,5,6,7,8];
 
     const renamePlayers = () => {
         if (!_gameEnded) {
@@ -69,8 +70,11 @@ const gameController = (() => {
     }
     
     const playTurn = (index) => {
-        if (!_gameEnded) displayController.markBoard(index);
-        _checkGameEnded(gameboard.state, index)
+        if (!_gameEnded) {
+            displayController.markBoard(index);
+            _availableSquares.splice(_availableSquares.indexOf(index), 1);
+        }
+        _checkGameEnded(gameboard.state, index);
         switch (_gameEnded) {
             case 'tie':
                 displayController.showMessage('It\'s a tie!');
@@ -78,11 +82,11 @@ const gameController = (() => {
             case true:
                 const winningSymbol = gameboard.state[index];
                 const winningPlayer = _players.filter(player => winningSymbol == player.symbol)[0];
-                displayController.showMessage(`${winningPlayer.name} Wins!`);
-                console.log(_winningSquares);
+                if (winningPlayer) displayController.showMessage(`${winningPlayer.name} Wins!`);
                 _winningSquares.forEach(index => {
                     displayController.colorSquare(index, 'red');
                 });
+                _winningSquares = [];
         }
         if (_gameEnded) {
             _currentPlayer = _players[0];
@@ -90,10 +94,19 @@ const gameController = (() => {
         else {
             _changePlayer();
             displayController.showMessage(`${_currentPlayer.name}'s turn`);
+            if (_currentPlayer.ai) {
+                const aiSquare = _availableSquares[_getRandomSquare()];
+                playTurn(aiSquare);
+            }
         }
+    }
+
+    const _getRandomSquare = () => {
+        return Math.floor(_availableSquares.length*Math.random());
     }
     
     const newGame = (reset=false) => {
+        _availableSquares = [0,1,2,3,4,5,6,7,8];
         for (i=0; i<3; i++) _winningSquares.pop();
         _gameEnded = false;
         displayController.renderGameboard(reset);
@@ -103,10 +116,13 @@ const gameController = (() => {
                 gameboard.state[i] = undefined;
             }
         }
-        
-        console.log('lol');
+
+        _players[0].ai = document.getElementById('ai-1').checked;
+        _players[1].ai = document.getElementById('ai-2').checked;
 
         displayController.showMessage(`${_players[0].name}'s turn`);
+
+        if (_players[0].ai) playTurn(_getRandomSquare());
     }
 
     return {getCurrentPlayer, newGame, playTurn, renamePlayers};
