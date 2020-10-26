@@ -136,7 +136,6 @@ const gameController = (() => {
         if (_players[0].ai) {
             if (displayController.getAIDifficulty()==1) {
                 playTurn(_getBestMove(gameboard.state));
-                console.log('lol');
             }
             else {
                 playTurn(_availableSquares[_getRandomSquare()]);
@@ -163,7 +162,6 @@ const gameController = (() => {
                     worstScore = currentScore;
                     worstMove = i;
                 }
-                console.log("Worst move: ",worstMove, "Best move: ", bestMove);
             }
         }
         if (maxOrMin === 1) {
